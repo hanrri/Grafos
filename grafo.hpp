@@ -125,6 +125,10 @@ class Grafo{
         cout<<nome;
     }
 
+    string get_nome(){
+        return nome;
+    }
+
     void imprime_grafo(){
         cout<<"Nome: "<<nome<<" | Vértices: "<<n_vertices<<endl;
         imprimir_conexoes();

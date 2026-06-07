@@ -41,6 +41,12 @@ int ler_numero() {
     }
 }
 
+void remover_espacos_finais(string &str) {
+    while (!str.empty() && isspace(str.back())) {
+        str.pop_back();
+    }
+}
+
 int main(){
     vector<Grafo> grafos;
     string ultimo_save = "";
@@ -83,10 +89,32 @@ int main(){
                             break;
 
                         case 1:{
-                            cout<<"Dê um nome ao seu novo grafo: "<<endl<<"R.: ";
+                            cout<<"Dê um nome ao seu novo grafo"<<endl;
+                            cout<<"(Ou digite '0' para cancelar)"<<endl<<"R.: ";
                             Lbuffer;
                             
                             string nome; getline(cin, nome);
+                            remover_espacos_finais(nome);
+
+                            if(nome == "0"){
+                                cout << "Criação de grafo cancelada." << endl;
+                                cout<<"---------------------------"<<endl<<endl;
+                                break;
+                            }
+
+                            bool nome_repetido = false;
+                            for(size_t i = 0; i < grafos.size(); i++){
+                                if(grafos[i].get_nome() == nome){
+                                    nome_repetido = true;
+                                    break;
+                                }
+                            }
+
+                            if(nome_repetido){
+                                cout << "  [!] ERRO: Já existe um grafo com o nome '" << nome << "'!" << endl;
+                                cout<<"---------------------------"<<endl<<endl;
+                                break;
+                            }
 
                             cout<<"Seu grafo tem quantos vértices?"<<endl<<"R.: ";
                             int qtd_vertices = ler_numero();
@@ -345,6 +373,8 @@ int main(){
                             Lbuffer;
 
                             string nome_save; getline(cin, nome_save);
+                            remover_espacos_finais(nome_save);
+
                             string nome_arquivo;
 
                             if(nome_save == "0"){
@@ -411,6 +441,7 @@ int main(){
                             Lbuffer;
 
                             string nome_save; getline(cin, nome_save);
+                            remover_espacos_finais(nome_save);
 
                             if(nome_save == "0"){
                                 cout << "Carregamento cancelado." << endl;
