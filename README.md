@@ -26,3 +26,34 @@ Este projeto utiliza um `Makefile` para facilitar a compilação. Certifique-se 
 ```bash
 git clone [https://github.com/hanrri/Grafos.git](https://github.com/hanrri/Grafos.git)
 cd Grafos
+```
+2. Compile o projeto:
+```bash
+make
+```
+3. Execute:
+```bash
+./programa
+```
+
+### 📝 Exemplo de Uso
+```cpp
+#include "grafo.hpp"
+
+int main() {
+    // Cria um grafo com 5 vértices
+    Grafo g(5, "Mapa da Cidade");
+
+    // Adiciona arestas: (u, v, peso, direcionado, permite_multiplas)
+    g.adicionar_aresta(1, 2, 50, false, false);
+    g.adicionar_aresta(2, 3, 30, false, false);
+
+    // Encontra o caminho mais curto usando Dijkstra
+    vector<int> distancias, pais;
+    g.dijkstra(1, distancias, pais);
+
+    g.imprime_grafo();
+
+    return 0;
+}
+```
