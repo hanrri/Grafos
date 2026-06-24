@@ -375,7 +375,7 @@ class Grafo{
 
         if(numero_componentes>1){
             cout<< "---TAMANHO DE CADA ILHA---"<<endl;
-            for(size_t i = 0; i<numero_componentes; i++){
+            for(int i = 0; i<numero_componentes; i++){
                 cout<< "  -> Componente "<<i+1<<": "<<tamanhos[i]<<" vertices"<<endl;
                 cout<<"    -> Vertices da componente: ";
                 int tam = lista_de_componentes[i].size();

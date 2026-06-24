@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 #include <filesystem>
-#include "grafo.hpp"
+#include "../include/grafo.hpp"
 
 using namespace std;
 
@@ -13,7 +13,6 @@ typedef vector<pii> vii;
 typedef map<int, int> mpii;
 typedef map<string, int> mpsi;
 
-const int INF = 0x3f3f3f3f;
 const ll LINF = 0x3f3f3f3f3f3f3f3fll;
 const int MOD = 1e9 + 7;
 
@@ -104,7 +103,7 @@ int main(){
 
                             bool nome_repetido = false;
                             for(size_t i = 0; i < grafos.size(); i++){
-                                if(grafos[i].get_nome() == nome){
+                                if(grafos[i].get_nome() == nome){ 
                                     nome_repetido = true;
                                     break;
                                 }
@@ -153,7 +152,7 @@ int main(){
                                 cout<<"R.: ";
                                 int id = ler_numero();
                                 
-                                if(id >= 0 && id < grafos.size()){
+                                if(id >= 0 && id < (int)grafos.size()){
                                     cout<<"Deseja adicionar quantas arestas?"<<endl<<"R.: ";
                                     int n = ler_numero();
                                     
@@ -186,7 +185,7 @@ int main(){
                                 cout<<"R.: ";
                                 int id = ler_numero();
                                 
-                                if(id >= 0 && id < grafos.size()){
+                                if(id >= 0 && id < (int)grafos.size()){
                                     cout<<"Deseja remover quantas arestas?"<<endl<<"R.: ";
                                     int n = ler_numero();
                                     
@@ -245,7 +244,7 @@ int main(){
                                 cout<<"R.: ";
                                 int id = ler_numero();
 
-                                if(id >= 0 && id < grafos.size()){
+                                if(id >= 0 && id < (int)grafos.size()){
                                     grafos[id].imprimir_conexoes();
                                 } else {
                                     cout << "Grafo invalido! ;-;" << endl;
@@ -267,7 +266,7 @@ int main(){
                                 cout<<"R.: ";
                                 int id = ler_numero();
 
-                                if(id >= 0 && id < grafos.size()) grafos[id].imprimir_componentes();
+                                if(id >= 0 && id < (int)grafos.size()) grafos[id].imprimir_componentes();
                                 else cout << "Grafo invalido! ;-;" << endl;
                             }
                             cout<<"---------------------------"<<endl<<endl;
@@ -286,7 +285,7 @@ int main(){
                                 cout<<"R.: ";
                                 int id = ler_numero();
 
-                                if(id >= 0 && id < grafos.size()){
+                                if(id >= 0 && id < (int)grafos.size()){
                                     cout << "Digite a origem e o destino: ";
                                     a = ler_numero();
                                     b = ler_numero();
@@ -311,7 +310,7 @@ int main(){
                                 cout<<"R.: ";
                                 int id = ler_numero();
 
-                                if(id >= 0 && id < grafos.size()) grafos[id].encontra_ciclos_n_arestas();
+                                if(id >= 0 && id < (int)grafos.size()) grafos[id].encontra_ciclos_n_arestas();
                                 else cout << "Grafo invalido! ;-;" << endl;
                             }
                             cout<<"---------------------------"<<endl<<endl;
@@ -330,7 +329,7 @@ int main(){
                                 cout<<"R.: ";
                                 int id = ler_numero();
                                 
-                                if(id >= 0 && id < grafos.size()) grafos[id].verifica_bipartido();
+                                if(id >= 0 && id < (int)grafos.size()) grafos[id].verifica_bipartido();
                                 else cout << "Grafo invalido! ;-;" << endl;
                             }
                             cout<<"---------------------------"<<endl<<endl;
@@ -469,9 +468,9 @@ int main(){
                                         Grafo g(v, nome);
 
                                         for(int j = 0; j < a; j++){
-                                            int u, vizinho;
-                                            arquivo >> u >> vizinho;
-                                            g.adicionar_aresta(u, vizinho);
+                                            int u, vizinho, peso;
+                                            arquivo >> u >> vizinho >> peso;
+                                            g.adicionar_aresta(u, vizinho, peso);
                                         }
 
                                         grafos.push_back(g);
