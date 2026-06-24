@@ -5,23 +5,32 @@
 #include <math.h>
 #include <algorithm>
 #include <fstream>
+#include <stack>
 
 using namespace std;
 
+const int INF = 0x3f3f3f3f;
+
 class Grafo{
     private:
-
+    // =======================================================
+    // 1. ATRIBUTOS
+    // =======================================================
     int n_vertices;
     string nome;
-    vector<vector<int>> adj;
+    vector<vector<pair<int, int>>> adj;
+    vector<vector<pair<int, int>>> inv_adj;
     vector<bool> visitados;
 
+    // =======================================================
+    // 2. MÉTODOS AUXILIARES (HELPERS PRIVADOS)
+    // =======================================================
     int dfs(int vertice){
         if(visitados[vertice]) return 0;
         visitados[vertice] = true;
 
         int tamanho_ilha = 1;
-        for(int vizinho : adj[vertice]){
+        for(auto [vizinho, peso] : adj[vertice]){
             tamanho_ilha += dfs(vizinho);
         }
 
@@ -35,7 +44,7 @@ class Grafo{
         componente_atual.push_back(vertice);
 
         int tamanho_ilha = 1;
-        for(int vizinho : adj[vertice]){
+        for(auto [vizinho, peso] : adj[vertice]){
             int funcao = dfs_componente(vizinho,componente_atual);
             tamanho_ilha += funcao;
         }
@@ -49,7 +58,7 @@ class Grafo{
         qtd_vertices++;
         qtd_arestas+=adj[vertice].size();
 
-        for(int vizinho:adj[vertice]){
+        for(auto [vizinho, peso] : adj[vertice]){
             if(!visitados[vizinho]){
                 dfs_ciclos_n_arestas(vizinho, qtd_vertices, qtd_arestas);
             }
@@ -59,7 +68,7 @@ class Grafo{
     bool dfs_ciclos_percorrendo(int vertice, int pai){
         visitados[vertice] = true;
 
-        for(auto vizinho:adj[vertice]){
+        for(auto [vizinho, peso] : adj[vertice]){
             if(!visitados[vizinho]){
                 if(dfs_ciclos_percorrendo(vizinho, vertice)){
                     return true;
@@ -78,7 +87,7 @@ class Grafo{
         
         int prox_cor=cor^1;
 
-        for(auto vizinho:adj[vertice]){
+        for(auto [vizinho, peso] : adj[vertice]){
             if(!visitados[vizinho]){
                 if(!dfs_bipartido(vizinho, prox_cor, coloracao)){
                     return false;
@@ -93,6 +102,31 @@ class Grafo{
         return true;
     }
 
+    void dfs_kosaraju_1(int vertice, stack<int>& ordem){
+        if(visitados[vertice]) return;
+        visitados[vertice] = true;
+
+        for(auto [vizinho, peso] : adj[vertice]){
+            dfs_kosaraju_1(vizinho, ordem);
+        }
+
+        ordem.push(vertice);
+        return;
+    }
+
+    void dfs_kosaraju_2(int vertice, vector<int>& componentes, int n_componentes){
+        if(visitados[vertice]) return;
+        visitados[vertice] = true;
+
+        componentes[vertice] = n_componentes;
+
+        for(auto [vizinho, peso] : inv_adj[vertice]){
+            dfs_kosaraju_2(vizinho, componentes, n_componentes);
+        }
+
+        return;
+    }
+
     void bfs(int vertice, vector<int>& dist, vector<int>& pai){
         queue<int> fila;
         dist[vertice]=0;
@@ -102,7 +136,7 @@ class Grafo{
             int atual = fila.front();
             fila.pop();
 
-            for(auto vizinho:adj[atual]){
+            for(auto [vizinho, peso] : adj[atual]){
                 if(dist[vizinho]==-1){
                     dist[vizinho]=dist[atual]+1;
                     pai[vizinho]=atual;
@@ -113,79 +147,40 @@ class Grafo{
     }
 
     public:
-
+    // =======================================================
+    // 3. CONSTRUTOR E INFORMAÇÕES BÁSICAS
+    // =======================================================
     Grafo(int vertices, string palavra){
         this->n_vertices = vertices;
         this->nome = palavra;
         adj.resize(vertices+1);
+        inv_adj.resize(vertices+1);
         visitados.assign(vertices+1, false);
-    }
-
-    void imprime_nome(){
-        cout<<nome;
     }
 
     string get_nome(){
         return nome;
     }
 
-    void imprime_grafo(){
-        cout<<"Nome: "<<nome<<" | Vértices: "<<n_vertices<<endl;
-        imprimir_conexoes();
+    int get_grau(int vertice) {
+        if(vertice < 1 || vertice > n_vertices) return -1;
+        return adj[vertice].size();
     }
 
-    void imprimir_conexoes(){
-        cout<<endl<<"---LISTA DE ADJACENCIA---"<<endl;
+    vector<int> get_vertices_impares() {
+        vector<int> impares;
         for(int i=1; i<=n_vertices; i++){
-            cout<<"Vertice "<<i<<" -> ";
-            if(adj[i].size()==0){
-                cout<< "VAZIO";
-            }else{
-                for(int vizinho : adj[i]){
-                    cout<<"["<<vizinho<<"] ";
-                }
+            if(adj[i].size() % 2 != 0){
+                impares.push_back(i);
             }
-            cout<<endl;
         }
+        return impares;
     }
 
-    void imprimir_componentes(){
-        limpar_visitados();
-        int numero_componentes = 0;
-        vector<int> tamanhos;
-        vector<vector<int>> lista_de_componentes;
-        vector<int> componente_atual;
-
-        for(int i=1; i<=n_vertices; i++){
-            if(!visitados[i]){
-                numero_componentes++;
-                tamanhos.push_back(dfs_componente(i,componente_atual));
-                sort(componente_atual.begin(), componente_atual.end());
-                lista_de_componentes.push_back(componente_atual);
-                componente_atual.clear();
-            }
-        }
-
-        cout<< "Numero de componentes: "<<numero_componentes<<endl<<endl;
-
-        if(numero_componentes>1){
-            cout<< "---TAMANHO DE CADA ILHA---"<<endl;
-            for(size_t i = 0; i<numero_componentes; i++){
-                cout<< "  -> Componente "<<i+1<<": "<<tamanhos[i]<<" vertices"<<endl;
-                cout<<"    -> Vertices da componente: ";
-                int tam = lista_de_componentes[i].size();
-                for(int j=0; j<tam; j++){
-                    cout<<lista_de_componentes[i][j];
-                    if(j<tam-1){
-                        cout<<", ";
-                    }
-                }
-                cout<<endl;
-            }
-        }
-    }
-
-    bool adicionar_aresta(int u, int v, bool direcionado = false){
+    // =======================================================
+    // 4. MANIPULAÇÃO DA ESTRUTURA
+    // =======================================================
+    bool adicionar_aresta(int u, int v, int peso = 1, bool direcionado = false, bool permite_multiplas = true){
         if(u < 1 || u > n_vertices || v < 1 || v > n_vertices){
             cout << "  [!] ERRO: Vertices invalidos! O grafo so vai de 1 a " << n_vertices << "." << endl;
             return false;
@@ -196,15 +191,20 @@ class Grafo{
             return false;
         }
 
-        auto it = find(adj[u].begin(), adj[u].end(), v);
-        if(it != adj[u].end()){
-            cout<<"  [!] ERRO: Essa aresta já existe!"<<endl;
-            return false;
+        if(!permite_multiplas){
+            auto it = find_if(adj[u].begin(), adj[u].end(), [v](const pair<int, int>& p){ return p.first == v; });
+            if(it != adj[u].end()){
+                cout<<"  [!] ERRO: Essa aresta já existe!"<<endl;
+                return false;
+            }
         }
 
-        adj[u].push_back(v);
+        adj[u].push_back({v, peso});
+        inv_adj[v].push_back({u, peso});
+        
         if(!direcionado){
-            adj[v].push_back(u);
+            adj[v].push_back({u, peso});
+            inv_adj[u].push_back({v, peso});
         }
 
         return true;
@@ -221,8 +221,7 @@ class Grafo{
             return false;
         }
 
-        auto it = find(adj[u].begin(), adj[u].end(), v);
-
+        auto it = find_if(adj[u].begin(), adj[u].end(), [v](const pair<int, int>& p){ return p.first == v; });
         if(it == adj[u].end()){
             cout<<"  [!] ERRO: Essa aresta não existe!"<<endl;
             return false;
@@ -230,10 +229,20 @@ class Grafo{
 
         adj[u].erase(it);
 
+        auto inv_it = find_if(inv_adj[v].begin(), inv_adj[v].end(), [u](const pair<int, int>& p){ return p.first == u; });
+        if(inv_it != inv_adj[v].end()){
+            inv_adj[v].erase(inv_it);
+        }
+
         if(!direcionado){
-            auto itt = find(adj[v].begin(), adj[v].end(), u);
+            auto itt = find_if(adj[v].begin(), adj[v].end(), [u](const pair<int, int>& p){ return p.first == u; });
             if(itt != adj[v].end()){
                 adj[v].erase(itt);
+            }
+
+            auto itt_inv = find_if(inv_adj[u].begin(), inv_adj[u].end(), [v](const pair<int, int>& p){ return p.first == v; });
+            if(itt_inv != inv_adj[u].end()){
+                inv_adj[u].erase(itt_inv);
             }
         }
 
@@ -242,6 +251,34 @@ class Grafo{
 
     void limpar_visitados(){
         fill(visitados.begin(), visitados.end(), false);
+    }
+
+    // =======================================================
+    // 5. CAMINHOS E DISTÂNCIAS
+    // =======================================================
+    void dijkstra(int origem, vector<int>& dist, vector<int>& pai){
+        dist.assign(n_vertices+1, INF);
+        pai.assign(n_vertices+1, -1);
+        
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+
+        dist[origem]=0;
+        pq.push({0, origem});
+
+        while(!pq.empty()){
+            auto [d, atual] = pq.top();
+            pq.pop();
+
+            if(d>dist[atual]) continue;
+
+            for(auto [vizinho, peso] : adj[atual]){
+                if(dist[vizinho]>dist[atual]+peso){
+                    dist[vizinho]=dist[atual]+peso;
+                    pai[vizinho]=atual;
+                    pq.push({dist[vizinho], vizinho});
+                }
+            }
+        }
     }
 
     void mostrar_tamanhos(int origem){
@@ -314,6 +351,45 @@ class Grafo{
         cout<<endl;
     }
 
+    // =======================================================
+    // 6. ANÁLISE DE PROPRIEDADES DO GRAFO
+    // =======================================================
+    void imprimir_componentes(){
+        limpar_visitados();
+        int numero_componentes = 0;
+        vector<int> tamanhos;
+        vector<vector<int>> lista_de_componentes;
+        vector<int> componente_atual;
+
+        for(int i=1; i<=n_vertices; i++){
+            if(!visitados[i]){
+                numero_componentes++;
+                tamanhos.push_back(dfs_componente(i,componente_atual));
+                sort(componente_atual.begin(), componente_atual.end());
+                lista_de_componentes.push_back(componente_atual);
+                componente_atual.clear();
+            }
+        }
+
+        cout<< "Numero de componentes: "<<numero_componentes<<endl<<endl;
+
+        if(numero_componentes>1){
+            cout<< "---TAMANHO DE CADA ILHA---"<<endl;
+            for(size_t i = 0; i<numero_componentes; i++){
+                cout<< "  -> Componente "<<i+1<<": "<<tamanhos[i]<<" vertices"<<endl;
+                cout<<"    -> Vertices da componente: ";
+                int tam = lista_de_componentes[i].size();
+                for(int j=0; j<tam; j++){
+                    cout<<lista_de_componentes[i][j];
+                    if(j<tam-1){
+                        cout<<", ";
+                    }
+                }
+                cout<<endl;
+            }
+        }
+    }
+
     bool encontra_ciclos_percorrendo(){
         limpar_visitados();
         for(int i=1; i<=n_vertices; i++){
@@ -349,6 +425,32 @@ class Grafo{
         return false;
     }
 
+    vector<int> kosaraju(){
+        limpar_visitados();
+        stack<int> ordem;
+
+        for(int i=1; i<=n_vertices; i++){
+            if(!visitados[i]){
+                dfs_kosaraju_1(i, ordem);
+            }
+        }
+
+        limpar_visitados();
+        int n_componentes=1;
+        vector<int> componentes(n_vertices+1);
+
+        while(!ordem.empty()){
+            int atual = ordem.top();
+            ordem.pop();
+
+            if(!visitados[atual]){
+                dfs_kosaraju_2(atual, componentes, n_componentes++);
+            }
+        }
+
+        return componentes;
+    }
+
     bool verifica_bipartido(){
         limpar_visitados();
         int cor=0;
@@ -368,24 +470,51 @@ class Grafo{
         return true;
     }
 
+    // =======================================================
+    // 7. ENTRADA E SAÍDA DE DADOS (I/O)
+    // =======================================================
+    void imprime_nome(){
+        cout<<nome;
+    }
+
+    void imprime_grafo(){
+        cout<<"Nome: "<<nome<<" | Vértices: "<<n_vertices<<endl;
+        imprimir_conexoes();
+    }
+
+    void imprimir_conexoes(){
+        cout<<endl<<"---LISTA DE ADJACENCIA---"<<endl;
+        for(int i=1; i<=n_vertices; i++){
+            cout<<"Vertice "<<i<<" -> ";
+            if(adj[i].size()==0){
+                cout<< "VAZIO";
+            }else{
+                for(auto [vizinho, peso] : adj[i]){
+                    cout<<"["<<vizinho<<"("<<peso<<")] ";
+                }
+            }
+            cout<<endl;
+        }
+    }
+
     void salvar_grafo(ofstream& arquivo){
         arquivo << nome << "\n";
         arquivo << n_vertices << "\n";
 
         int total_arestas = 0;
-        vector<pair<int, int>> arestas;
+        vector<pair<pair<int, int>, int>> arestas;
         for(int u = 1; u <= n_vertices; u++){
-            for(int v : adj[u]){
+            for(auto [v, peso] : adj[u]){
                 if(u <= v){
                     total_arestas++;
-                    arestas.push_back({u, v});
+                    arestas.push_back({{u, v}, peso});
                 }
             }
         }
 
         arquivo << total_arestas << "\n";
         for(auto aresta : arestas){
-            arquivo << aresta.first << " " << aresta.second << "\n";
+            arquivo << aresta.first.first << " " << aresta.first.second << " " << aresta.second << "\n";
         }
     }
 };
