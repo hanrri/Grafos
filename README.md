@@ -24,7 +24,7 @@ Este projeto utiliza um `Makefile` para facilitar a compilação. Certifique-se 
 
 1. Clone o repositório:
 ```bash
-git clone [https://github.com/hanrri/Grafos.git](https://github.com/hanrri/Grafos.git)
+git clone https://github.com/hanrri/Grafos.git
 cd Grafos
 ```
 2. Compile o projeto:
