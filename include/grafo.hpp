@@ -18,6 +18,9 @@ class Grafo{
     // =======================================================
     int n_vertices;
     string nome;
+    bool direcionado;
+    bool tem_peso;
+    bool permite_multiplas;
     vector<vector<pair<int, int>>> adj;
     vector<vector<pair<int, int>>> inv_adj;
     vector<bool> visitados;
@@ -150,17 +153,27 @@ class Grafo{
     // =======================================================
     // 3. CONSTRUTOR E INFORMAÇÕES BÁSICAS
     // =======================================================
-    Grafo(int vertices, string palavra){
+    Grafo(int vertices, string palavra, bool direcionado = false, bool tem_peso = false, bool permite_multiplas = true){
         this->n_vertices = vertices;
         this->nome = palavra;
+        this->direcionado = direcionado;
+        this->tem_peso = tem_peso;
+        this->permite_multiplas = permite_multiplas;
+        
         adj.resize(vertices+1);
         inv_adj.resize(vertices+1);
         visitados.assign(vertices+1, false);
     }
 
-    string get_nome(){
-        return nome;
-    }
+    string get_nome(){ return nome; }
+
+    int get_n_vertices() { return n_vertices; }
+
+    bool is_direcionado() { return direcionado; }
+
+    bool is_ponderado() { return tem_peso; }
+
+    bool is_multigrafo() { return permite_multiplas; }
 
     int get_grau(int vertice) {
         if(vertice < 1 || vertice > n_vertices) return -1;
@@ -169,6 +182,11 @@ class Grafo{
 
     vector<int> get_vertices_impares() {
         vector<int> impares;
+        if(this->direcionado){
+            cout << "  [!] AVISO: A logica de impares atual eh para grafos nao direcionados!" << endl;
+            return impares;
+        }
+
         for(int i=1; i<=n_vertices; i++){
             if(adj[i].size() % 2 != 0){
                 impares.push_back(i);
@@ -176,11 +194,15 @@ class Grafo{
         }
         return impares;
     }
+    
+    const vector<pair<int, int>>& get_vizinhos(int vertice) {
+        return adj[vertice];
+    }
 
     // =======================================================
     // 4. MANIPULAÇÃO DA ESTRUTURA
     // =======================================================
-    bool adicionar_aresta(int u, int v, int peso = 1, bool direcionado = false, bool permite_multiplas = true){
+    bool adicionar_aresta(int u, int v, int peso = 1){
         if(u < 1 || u > n_vertices || v < 1 || v > n_vertices){
             cout << "  [!] ERRO: Vertices invalidos! O grafo so vai de 1 a " << n_vertices << "." << endl;
             return false;
@@ -191,7 +213,7 @@ class Grafo{
             return false;
         }
 
-        if(!permite_multiplas){
+        if(!this->permite_multiplas){
             auto it = find_if(adj[u].begin(), adj[u].end(), [v](const pair<int, int>& p){ return p.first == v; });
             if(it != adj[u].end()){
                 cout<<"  [!] ERRO: Essa aresta já existe!"<<endl;
@@ -199,10 +221,12 @@ class Grafo{
             }
         }
 
+        if(!this->tem_peso) peso = 1;
+
         adj[u].push_back({v, peso});
         inv_adj[v].push_back({u, peso});
         
-        if(!direcionado){
+        if(!this->direcionado){
             adj[v].push_back({u, peso});
             inv_adj[u].push_back({v, peso});
         }
@@ -210,7 +234,7 @@ class Grafo{
         return true;
     }
 
-    bool excluir_aresta(int u, int v, bool direcionado = false){
+    bool excluir_aresta(int u, int v, int peso_alvo = -1){
         if(u < 1 || u > n_vertices || v < 1 || v > n_vertices){
             cout << "  [!] ERRO: Vertices invalidos! O grafo so vai de 1 a " << n_vertices << "." << endl;
             return false;
@@ -221,26 +245,36 @@ class Grafo{
             return false;
         }
 
-        auto it = find_if(adj[u].begin(), adj[u].end(), [v](const pair<int, int>& p){ return p.first == v; });
+        auto it = find_if(adj[u].begin(), adj[u].end(), [v, peso_alvo](const pair<int, int>& p){ 
+            return p.first == v && (peso_alvo == -1 || p.second == peso_alvo); 
+        });
+        
         if(it == adj[u].end()){
             cout<<"  [!] ERRO: Essa aresta não existe!"<<endl;
             return false;
         }
 
+        int peso_excluido = it->second;
         adj[u].erase(it);
-
-        auto inv_it = find_if(inv_adj[v].begin(), inv_adj[v].end(), [u](const pair<int, int>& p){ return p.first == u; });
+        
+        auto inv_it = find_if(inv_adj[v].begin(), inv_adj[v].end(), [u, peso_excluido](const pair<int, int>& p){ 
+            return p.first == u && p.second == peso_excluido; 
+        });
         if(inv_it != inv_adj[v].end()){
             inv_adj[v].erase(inv_it);
         }
 
-        if(!direcionado){
-            auto itt = find_if(adj[v].begin(), adj[v].end(), [u](const pair<int, int>& p){ return p.first == u; });
+        if(!this->direcionado){
+            auto itt = find_if(adj[v].begin(), adj[v].end(), [u, peso_excluido](const pair<int, int>& p){ 
+                return p.first == u && p.second == peso_excluido; 
+            });
             if(itt != adj[v].end()){
                 adj[v].erase(itt);
             }
 
-            auto itt_inv = find_if(inv_adj[u].begin(), inv_adj[u].end(), [v](const pair<int, int>& p){ return p.first == v; });
+            auto itt_inv = find_if(inv_adj[u].begin(), inv_adj[u].end(), [v, peso_excluido](const pair<int, int>& p){ 
+                return p.first == v && p.second == peso_excluido; 
+            });
             if(itt_inv != inv_adj[u].end()){
                 inv_adj[u].erase(itt_inv);
             }
