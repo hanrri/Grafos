@@ -1,5 +1,6 @@
-grafos
-saves/
-*.exe
-a
+*.o
+programa
 main
+src/main
+saves/*.txt
+*.exe
